@@ -11,7 +11,7 @@ COVER_OUT      := coverage.out
 
 .PHONY: help
 help: ## Show available targets
-	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_ -]+:.*##/ {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .PHONY: swag
 swag: $(SWAG) ## Generate swagger docs to swagger/
@@ -30,9 +30,9 @@ run: swag ## Run server
 test: ## Run tests with race detector
 	go test -race -count=1 ./...
 
-.PHONY: cover
-cover: ## Run tests with coverage report
-	go test -race -count=1 -coverprofile=$(COVER_OUT) ./...
+.PHONY: cover coverage
+cover coverage: ## Coverage report for internal/ (excludes cmd/ and generated swagger/)
+	go test -race -count=1 -covermode=atomic -coverpkg=./internal/... -coverprofile=$(COVER_OUT) ./internal/...
 	go tool cover -func=$(COVER_OUT)
 
 .PHONY: fmt
