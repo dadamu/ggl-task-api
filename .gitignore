@@ -1,0 +1,5 @@
+bin/
+coverage.out
+
+# assignment spec, do not commit
+*.pdf

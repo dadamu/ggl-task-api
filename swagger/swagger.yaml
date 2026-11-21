@@ -1,0 +1,27 @@
+basePath: /
+definitions:
+  handler.HealthResponse:
+    properties:
+      status:
+        example: ok
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Task API built with DDD layout.
+  title: GGL Task API
+  version: "1.0"
+paths:
+  /healthz:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.HealthResponse'
+      summary: Health check
+      tags:
+      - health
+swagger: "2.0"
