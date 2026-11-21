@@ -4,7 +4,7 @@ A RESTful task API written in Go, using [gin](https://github.com/gin-gonic/gin) 
 
 ## Requirements
 
-- Go 1.27+ (see `go.mod`)
+- Go 1.27.4+ (see `go.mod`), or only Docker
 - Make
 - Docker (optional)
 
@@ -72,4 +72,4 @@ Dependency direction: `transport → application → domain ← infrastructures`
 
 ## Design decisions
 
-> TODO: id type, PUT semantics, validation rules, status codes, concurrency.
+See [Architecture Decision Records](docs/adr/README.md).
