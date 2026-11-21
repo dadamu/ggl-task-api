@@ -4,6 +4,7 @@ linters:
   default: standard
   enable:
     - bodyclose
+    - depguard
     - errorlint
     - gocritic
     - misspell
@@ -11,6 +12,39 @@ linters:
     - testifylint
     - unconvert
     - unparam
+  settings:
+    # Enforces the dependency direction of ADR-0001:
+    # transport → application → domain ← infrastructures
+    depguard:
+      rules:
+        domain:
+          list-mode: strict
+          files:
+            - "**/internal/domain/**"
+            - "!$test"
+          allow:
+            - $gostd
+            - github.com/dadamu/ggl-task-api/internal/domain
+        application:
+          files:
+            - "**/internal/application/**"
+            - "!$test"
+          deny:
+            - pkg: github.com/dadamu/ggl-task-api/internal/transport
+              desc: "application must not depend on transport (ADR-0001)"
+            - pkg: github.com/dadamu/ggl-task-api/internal/infrastructures
+              desc: "application must not depend on infrastructures (ADR-0001)"
+            - pkg: github.com/gin-gonic/gin
+              desc: "application must not depend on HTTP frameworks (ADR-0001)"
+        infrastructures:
+          files:
+            - "**/internal/infrastructures/**"
+            - "!$test"
+          deny:
+            - pkg: github.com/dadamu/ggl-task-api/internal/transport
+              desc: "infrastructures must not depend on transport (ADR-0001)"
+            - pkg: github.com/dadamu/ggl-task-api/internal/application
+              desc: "infrastructures must not depend on application (ADR-0001)"
   exclusions:
     paths:
       - swagger

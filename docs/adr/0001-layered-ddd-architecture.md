@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-21
+- **Amended:** 2026-11-21 — Compliance: dependency direction enforced by `depguard` instead of code review
 
 ## Context
 
@@ -48,8 +49,11 @@ Dependency direction: `transport → application → domain ← infrastructures`
 
 ## Compliance
 
-- `domain` must not import any other internal package or third-party framework (gin, etc.).
-- Code review checks dependency direction.
+- Dependency direction is enforced by `depguard` in golangci-lint (run by `make lint` and CI):
+  - `domain` may import only the standard library and `internal/domain` (strict allow list).
+  - `application` must not import `transport`, `infrastructures` or gin.
+  - `infrastructures` must not import `transport` or `application`.
+- Test files are exempt so tests can use testify.
 
 ## Notes
 
