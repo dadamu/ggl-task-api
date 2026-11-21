@@ -2,11 +2,11 @@ package task_test
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dadamu/ggl-task-api/internal/domain/task"
@@ -25,7 +25,9 @@ func TestStatusValid(t *testing.T) {
 		{2, false},
 	}
 	for _, tt := range tests {
-		assert.Equal(t, tt.want, tt.status.Valid(), "status %d", tt.status)
+		t.Run(strconv.Itoa(int(tt.status)), func(t *testing.T) {
+			require.Equal(t, tt.want, tt.status.Valid())
+		})
 	}
 }
 
@@ -33,8 +35,9 @@ func TestNew(t *testing.T) {
 	got, err := task.New("Buy milk", task.StatusIncomplete, now)
 	require.NoError(t, err)
 
+	// UTC with millisecond precision.
 	want := time.Date(2026, 11, 21, 0, 0, 0, 123000000, time.UTC)
-	assert.Equal(t, task.Task{
+	require.Equal(t, task.Task{
 		Name:      "Buy milk",
 		Status:    task.StatusIncomplete,
 		Version:   task.InitialVersion,
@@ -69,12 +72,12 @@ func TestNewValidation(t *testing.T) {
 			got, err := task.New(tt.inName, tt.inStatus, now)
 			if tt.wantFields == nil {
 				require.NoError(t, err)
-				assert.Equal(t, tt.inName, got.Name)
+				require.Equal(t, tt.inName, got.Name)
 				return
 			}
 			var verr *task.ValidationError
 			require.ErrorAs(t, err, &verr)
-			assert.Equal(t, tt.wantFields, verr.Fields)
+			require.Equal(t, tt.wantFields, verr.Fields)
 		})
 	}
 }
@@ -87,11 +90,13 @@ func TestUpdate(t *testing.T) {
 	updated := orig
 	require.NoError(t, updated.Update("Buy oat milk", task.StatusCompleted, later))
 
-	assert.Equal(t, "Buy oat milk", updated.Name)
-	assert.Equal(t, task.StatusCompleted, updated.Status)
-	assert.Equal(t, orig.CreatedAt, updated.CreatedAt, "created_at must be preserved")
-	assert.Equal(t, later.UTC().Truncate(time.Millisecond), updated.UpdatedAt)
-	assert.Equal(t, orig.Version, updated.Version, "version is bumped by the repository, not the entity")
+	require.Equal(t, task.Task{
+		Name:      "Buy oat milk",
+		Status:    task.StatusCompleted,
+		Version:   orig.Version,   // bumped by the repository, not the entity
+		CreatedAt: orig.CreatedAt, // preserved
+		UpdatedAt: later.UTC().Truncate(time.Millisecond),
+	}, updated)
 }
 
 func TestUpdateInvalidLeavesTaskUnchanged(t *testing.T) {
@@ -103,8 +108,8 @@ func TestUpdateInvalidLeavesTaskUnchanged(t *testing.T) {
 
 	var verr *task.ValidationError
 	require.ErrorAs(t, err, &verr)
-	assert.Len(t, verr.Fields, 2)
-	assert.Equal(t, orig, updated)
+	require.Len(t, verr.Fields, 2)
+	require.Equal(t, orig, updated)
 }
 
 func TestVersionConflictError(t *testing.T) {
@@ -117,7 +122,7 @@ func TestVersionConflictError(t *testing.T) {
 
 	var cerr *task.VersionConflictError
 	require.ErrorAs(t, err, &cerr)
-	assert.Equal(t, current, cerr.Current)
+	require.Equal(t, current, cerr.Current)
 
 	wrapped := errors.Join(errors.New("context"), err)
 	require.ErrorIs(t, wrapped, task.ErrVersionConflict)
@@ -128,5 +133,5 @@ func TestValidationErrorMessage(t *testing.T) {
 		{Field: "name", Reason: "must not be blank"},
 		{Field: "status", Reason: "must be 0 or 1"},
 	}}
-	assert.Equal(t, "invalid task: name: must not be blank; status: must be 0 or 1", err.Error())
+	require.Equal(t, "invalid task: name: must not be blank; status: must be 0 or 1", err.Error())
 }
