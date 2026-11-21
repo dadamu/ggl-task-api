@@ -28,8 +28,11 @@ func NewTaskRepository() *TaskRepository {
 	return &TaskRepository{tasks: make(map[int64]task.Task)}
 }
 
-// Create assigns the next ID and stores the task. ID generation and insertion
-// happen in the same critical section, so concurrent creates never collide.
+// Create assigns the next ID and stores the task.
+//
+// ID generation and insertion must stay in one critical section; generating the
+// ID outside the lock would let concurrent creates read the same counter value
+// and overwrite each other.
 func (r *TaskRepository) Create(ctx context.Context, t task.Task) (task.Task, error) {
 	if err := ctx.Err(); err != nil {
 		return task.Task{}, err
@@ -77,8 +80,12 @@ func (r *TaskRepository) List(ctx context.Context) ([]task.Task, error) {
 }
 
 // Update replaces the stored task if its version equals expectedVersion.
-// Existence check, version check and write happen in one critical section,
-// so a task deleted concurrently is never resurrected.
+//
+// Existence check, version check and write must stay in one critical section.
+// Releasing the lock between check and write would be a TOCTOU
+// (time-of-check to time-of-use) bug: a concurrent Delete or Update could slip
+// into the gap, so a deleted task would be resurrected or a stale write accepted.
+// Do not "optimize" this into an RLock check followed by a separate Lock write.
 func (r *TaskRepository) Update(ctx context.Context, t task.Task, expectedVersion int64) (task.Task, error) {
 	if err := ctx.Err(); err != nil {
 		return task.Task{}, err

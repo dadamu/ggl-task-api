@@ -274,6 +274,7 @@ func runConcurrently(n int, fn func(i int)) {
 	wg.Wait()
 }
 
+// Guards against generating IDs outside the write lock.
 func TestConcurrentCreatesHaveUniqueIDs(t *testing.T) {
 	const n = 200
 	repo := memory.NewTaskRepository()
@@ -295,6 +296,8 @@ func TestConcurrentCreatesHaveUniqueIDs(t *testing.T) {
 	require.Len(t, listed, n)
 }
 
+// Guards against a TOCTOU Update: if the version check and the write were in
+// separate critical sections, several updates could pass the check before any writes.
 func TestConcurrentUpdatesSameVersionExactlyOneWins(t *testing.T) {
 	const n = 50
 	repo := memory.NewTaskRepository()
@@ -322,6 +325,8 @@ func TestConcurrentUpdatesSameVersionExactlyOneWins(t *testing.T) {
 	require.Equal(t, created.Version+1, stored.Version)
 }
 
+// Guards against a TOCTOU Update: if the existence check and the write were in
+// separate critical sections, a Delete in between would be undone by the write.
 func TestConcurrentUpdateAndDeleteNeverResurrects(t *testing.T) {
 	repo := memory.NewTaskRepository()
 
