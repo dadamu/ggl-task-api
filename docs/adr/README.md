@@ -4,7 +4,13 @@ This directory records significant design decisions for the Task API, following 
 [AWS Prescriptive Guidance ADR process](https://docs.aws.amazon.com/prescriptive-guidance/latest/architectural-decision-records/adr-process.html).
 
 Each ADR captures one decision: its context, the options considered, the decision, and its consequences.
-ADRs are immutable once accepted; a changed decision is recorded as a new ADR that supersedes the old one.
+
+Once accepted:
+
+- **Context, Considered options and Decision are immutable.** A changed decision is recorded
+  as a new ADR that supersedes the old one.
+- **Compliance, Notes and links may be amended** to stay accurate (e.g. a manual check
+  replaced by an automated one). Each amendment adds an `Amended` line with the date and reason.
 
 ## Index
 
@@ -27,6 +33,7 @@ ADRs are immutable once accepted; a changed decision is recorded as a new ADR th
 
 - **Status:** Proposed | Accepted | Deprecated | Superseded by ADR-XXXX
 - **Date:** YYYY-MM-DD
+- **Amended:** YYYY-MM-DD — reason (optional, one line per amendment)
 
 ## Context
 What is the issue that motivates this decision?
