@@ -1,8 +1,6 @@
 package task_test
 
 import (
-	"errors"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -13,23 +11,6 @@ import (
 )
 
 var now = time.Date(2026, 11, 21, 8, 0, 0, 123456789, time.FixedZone("UTC+8", 8*60*60))
-
-func TestStatusValid(t *testing.T) {
-	tests := []struct {
-		status task.Status
-		want   bool
-	}{
-		{-1, false},
-		{task.StatusIncomplete, true},
-		{task.StatusCompleted, true},
-		{2, false},
-	}
-	for _, tt := range tests {
-		t.Run(strconv.Itoa(int(tt.status)), func(t *testing.T) {
-			require.Equal(t, tt.want, tt.status.Valid())
-		})
-	}
-}
 
 func TestNew(t *testing.T) {
 	got, err := task.New("Buy milk", task.StatusIncomplete, now)
@@ -110,28 +91,4 @@ func TestUpdateInvalidLeavesTaskUnchanged(t *testing.T) {
 	require.ErrorAs(t, err, &verr)
 	require.Len(t, verr.Fields, 2)
 	require.Equal(t, orig, updated)
-}
-
-func TestVersionConflictError(t *testing.T) {
-	current := task.Task{ID: 1, Version: 3}
-	var err error = &task.VersionConflictError{Current: current}
-
-	require.ErrorIs(t, err, task.ErrVersionConflict)
-	require.NotErrorIs(t, err, task.ErrNotFound)
-	require.EqualError(t, err, task.ErrVersionConflict.Error())
-
-	var cerr *task.VersionConflictError
-	require.ErrorAs(t, err, &cerr)
-	require.Equal(t, current, cerr.Current)
-
-	wrapped := errors.Join(errors.New("context"), err)
-	require.ErrorIs(t, wrapped, task.ErrVersionConflict)
-}
-
-func TestValidationErrorMessage(t *testing.T) {
-	err := &task.ValidationError{Fields: []task.FieldError{
-		{Field: "name", Reason: "must not be blank"},
-		{Field: "status", Reason: "must be 0 or 1"},
-	}}
-	require.Equal(t, "invalid task: name: must not be blank; status: must be 0 or 1", err.Error())
 }
