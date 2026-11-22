@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-21
+- **Amended:** 2026-11-22 — Notes: retry guidance now points to ADR-0010
 
 ## Context
 
@@ -61,7 +62,8 @@ Adopt option 3.
 ## Notes
 
 - Version preconditions make a retried `PUT` fail with `409` after the original succeeded.
-  Retry safety is provided by `Idempotency-Key` ([ADR-0007](0007-idempotency-key.md)).
+  The `409` carries `current`, so the client can tell whether its change was applied
+  ([ADR-0010](0010-defer-idempotency-key.md); `Idempotency-Key` from ADR-0007 is not implemented).
 - Every successful `PUT` increments `version` and sets `updated_at`, even if the content is unchanged.
 - If `DELETE` protection becomes necessary, add an optional `?version=` query parameter, or
   migrate to `ETag`/`If-Match` in a superseding ADR.

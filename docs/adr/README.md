@@ -22,9 +22,10 @@ Once accepted:
 | [0004](0004-api-contract.md) | API contract: semantics, status codes and response format | Accepted |
 | [0005](0005-validation.md) | Validation responsibilities and rules | Accepted |
 | [0006](0006-timestamps-and-clock-injection.md) | Timestamps and clock injection | Accepted |
-| [0007](0007-idempotency-key.md) | Request idempotency via Idempotency-Key | Accepted |
+| [0007](0007-idempotency-key.md) | Request idempotency via Idempotency-Key | Superseded by 0010 |
 | [0008](0008-runtime-and-deployment.md) | Runtime and deployment | Accepted |
 | [0009](0009-testing-strategy.md) | Testing strategy | Accepted |
+| [0010](0010-defer-idempotency-key.md) | Defer Idempotency-Key | Accepted |
 
 ## Template
 

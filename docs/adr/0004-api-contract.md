@@ -1,6 +1,6 @@
 # ADR-0004: API contract: semantics, status codes and response format
 
-- **Status:** Accepted
+- **Status:** Accepted; Idempotency-Key parts superseded by [ADR-0010](0010-defer-idempotency-key.md)
 - **Date:** 2026-11-21
 - **Amended:** 2026-11-22 — Notes: error precedence; validation errors reported per stage
 
