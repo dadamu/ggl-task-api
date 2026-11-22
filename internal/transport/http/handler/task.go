@@ -23,21 +23,67 @@ func NewTask(svc *app.Service) *Task {
 	return &Task{svc: svc}
 }
 
+// Pagination limits for GET /tasks (ADR-0011).
+const (
+	DefaultPageSize = 20
+	MaxPageSize     = 100
+)
+
 // List godoc
 //
-//	@Summary	List tasks
-//	@Tags		tasks
-//	@Produce	json
-//	@Success	200	{object}	dto.TaskList	"Tasks ordered by id ascending"
-//	@Failure	500	{object}	apierror.Response
-//	@Router		/tasks [get]
+//	@Summary		List tasks
+//	@Description	Cursor pagination: pass next_cursor as "after" to get the next page.
+//	@Tags			tasks
+//	@Produce		json
+//	@Param			limit	query		int					false	"Page size"										minimum(1)	maximum(100)	default(20)
+//	@Param			after	query		int					false	"Return tasks with id greater than this cursor"	minimum(0)	default(0)
+//	@Success		200		{object}	dto.TaskList		"One page of tasks ordered by id ascending"
+//	@Failure		400		{object}	apierror.Response	"VALIDATION_FAILED for limit or after"
+//	@Failure		500		{object}	apierror.Response
+//	@Router			/tasks [get]
 func (h *Task) List(c *gin.Context) {
-	tasks, err := h.svc.List(c.Request.Context())
+	in, details := parseListInput(c)
+	if len(details) > 0 {
+		apierror.Abort(c, http.StatusBadRequest, apierror.Body{
+			Code:    apierror.CodeValidationFailed,
+			Message: "invalid query parameters",
+			Details: details,
+		})
+		return
+	}
+	page, err := h.svc.List(c.Request.Context(), in)
 	if err != nil {
 		apierror.FromError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, dto.FromTasks(tasks))
+	c.JSON(http.StatusOK, dto.FromTasks(page.Tasks, page.NextCursor))
+}
+
+// parseListInput reads limit and after, applying the default page size.
+// It reports every invalid parameter at once.
+func parseListInput(c *gin.Context) (app.ListInput, []apierror.FieldDetail) {
+	in := app.ListInput{Limit: DefaultPageSize}
+	var details []apierror.FieldDetail
+
+	if v, ok := c.GetQuery("limit"); ok {
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 1 || n > MaxPageSize {
+			details = append(details, apierror.FieldDetail{
+				Field: "limit", Reason: "must be an integer between 1 and " + strconv.Itoa(MaxPageSize),
+			})
+		} else {
+			in.Limit = n
+		}
+	}
+	if v, ok := c.GetQuery("after"); ok {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil || n < 0 {
+			details = append(details, apierror.FieldDetail{Field: "after", Reason: "must be a non-negative integer"})
+		} else {
+			in.After = n
+		}
+	}
+	return in, details
 }
 
 // Create godoc

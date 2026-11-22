@@ -59,22 +59,65 @@ func TestCreateInvalidIsNotStored(t *testing.T) {
 	var verr *task.ValidationError
 	require.ErrorAs(t, err, &verr)
 	require.Len(t, verr.Fields, 2)
-	listed, err := repo.List(t.Context())
+	listed, err := repo.List(t.Context(), task.ListQuery{Limit: 100})
 	require.NoError(t, err)
 	require.Empty(t, listed)
 }
 
 func TestList(t *testing.T) {
-	svc, _, _ := newService(t)
-	mustCreate(t, svc, "a")
-	mustCreate(t, svc, "b")
+	cursor := func(id int64) *int64 { return &id }
 
-	got, err := svc.List(t.Context())
+	tests := []struct {
+		name     string
+		in       app.ListInput
+		wantIDs  []int64
+		wantNext *int64
+	}{
+		{"first page", app.ListInput{Limit: 2}, []int64{1, 2}, cursor(2)},
+		{"middle page", app.ListInput{After: 2, Limit: 2}, []int64{3, 4}, cursor(4)},
+		{"last partial page", app.ListInput{After: 4, Limit: 2}, []int64{5}, nil},
+		{"exact fit has no next page", app.ListInput{Limit: 5}, []int64{1, 2, 3, 4, 5}, nil},
+		{"limit larger than total", app.ListInput{Limit: 10}, []int64{1, 2, 3, 4, 5}, nil},
+		{"after the last task", app.ListInput{After: 5, Limit: 2}, []int64{}, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc, _, _ := newService(t)
+			for _, name := range []string{"a", "b", "c", "d", "e"} {
+				mustCreate(t, svc, name)
+			}
+
+			got, err := svc.List(t.Context(), tt.in)
+
+			require.NoError(t, err)
+			require.Equal(t, tt.wantIDs, ids(got.Tasks))
+			require.Equal(t, tt.wantNext, got.NextCursor)
+		})
+	}
+}
+
+func TestListCursorSurvivesDeletion(t *testing.T) {
+	svc, _, _ := newService(t)
+	for _, name := range []string{"a", "b", "c", "d", "e"} {
+		mustCreate(t, svc, name)
+	}
+	first, err := svc.List(t.Context(), app.ListInput{Limit: 2})
+	require.NoError(t, err)
+	require.NoError(t, svc.Delete(t.Context(), *first.NextCursor)) // delete the cursor task itself
+	require.NoError(t, svc.Delete(t.Context(), 3))
+
+	second, err := svc.List(t.Context(), app.ListInput{After: *first.NextCursor, Limit: 2})
 
 	require.NoError(t, err)
-	require.Len(t, got, 2)
-	require.Equal(t, "a", got[0].Name)
-	require.Equal(t, "b", got[1].Name)
+	require.Equal(t, []int64{4, 5}, ids(second.Tasks), "no task skipped or repeated")
+}
+
+func ids(tasks []task.Task) []int64 {
+	out := make([]int64, len(tasks))
+	for i, tk := range tasks {
+		out[i] = tk.ID
+	}
+	return out
 }
 
 func TestUpdate(t *testing.T) {
@@ -168,11 +211,11 @@ func (r failingRepo) Get(ctx context.Context, id int64) (task.Task, error) {
 	return r.Repository.Get(ctx, id)
 }
 
-func (r failingRepo) List(ctx context.Context) ([]task.Task, error) {
+func (r failingRepo) List(ctx context.Context, q task.ListQuery) ([]task.Task, error) {
 	if r.failList {
 		return nil, errBoom
 	}
-	return r.Repository.List(ctx)
+	return r.Repository.List(ctx, q)
 }
 
 func (r failingRepo) Update(ctx context.Context, t task.Task, v int64) (task.Task, error) {
@@ -208,7 +251,7 @@ func TestRepositoryErrorsPropagate(t *testing.T) {
 	})
 	t.Run("list", func(t *testing.T) {
 		svc, _ := newFailing(t, failingRepo{failList: true})
-		_, err := svc.List(t.Context())
+		_, err := svc.List(t.Context(), app.ListInput{Limit: 20})
 		require.ErrorIs(t, err, errBoom)
 	})
 	t.Run("update: get fails", func(t *testing.T) {

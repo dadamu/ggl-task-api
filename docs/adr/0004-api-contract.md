@@ -1,6 +1,7 @@
 # ADR-0004: API contract: semantics, status codes and response format
 
-- **Status:** Accepted; Idempotency-Key parts superseded by [ADR-0010](0010-defer-idempotency-key.md)
+- **Status:** Accepted; Idempotency-Key parts superseded by [ADR-0010](0010-defer-idempotency-key.md);
+  `GET /tasks` pagination superseded by [ADR-0011](0011-cursor-pagination.md)
 - **Date:** 2026-11-21
 - **Amended:** 2026-11-22 — Notes: error precedence; validation errors reported per stage
 
