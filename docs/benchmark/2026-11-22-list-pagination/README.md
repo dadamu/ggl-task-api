@@ -1,13 +1,12 @@
 # List pagination
 
 - **Date:** 2026-11-22
-- **Informed:** [ADR-0011: Cursor pagination for GET /tasks](../adr/0011-cursor-pagination.md)
-- **Raw output:** [before](2026-11-22-list-before-pagination.txt) ·
-  [after](2026-11-22-list-after-pagination.txt)
+- **Informed:** [ADR-0011: Cursor pagination for GET /tasks](../../adr/0011-cursor-pagination.md)
+- **Raw output:** [before](before-pagination.txt) · [after](after-pagination.txt)
 
 ## Question
 
-The specification does not require pagination, and [ADR-0004](../adr/0004-api-contract.md) had
+The specification does not require pagination, and [ADR-0004](../../adr/0004-api-contract.md) had
 left it out of scope. Two questions:
 
 1. At what task count does an unpaginated `GET /tasks` become a problem, and which cost
@@ -92,7 +91,7 @@ Worst case (`BenchmarkListSparse`): 100,000 tasks with 99,980 deleted, first pag
 ## Decision
 
 Adopt cursor pagination with a default page size of 20 and a maximum of 100, served by walking
-IDs upward. Recorded in [ADR-0011](../adr/0011-cursor-pagination.md).
+IDs upward. Recorded in [ADR-0011](../../adr/0011-cursor-pagination.md).
 
 ## Revisit when
 

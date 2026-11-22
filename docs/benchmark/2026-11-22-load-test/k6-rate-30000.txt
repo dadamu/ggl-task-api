@@ -1,0 +1,50 @@
+
+
+  █ THRESHOLDS 
+
+    dropped_iterations{scenario:mixed}
+    ✗ 'count<1' count=808562
+
+    http_req_duration{scenario:mixed}
+    ✗ 'p(99)<50' p(99)=24.36s
+
+    http_req_failed{scenario:mixed}
+    ✗ 'rate<0.001' rate=46.51%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 144687 2740.538398/s
+    checks_succeeded...: 67.75% 98031 out of 144687
+    checks_failed......: 32.24% 46656 out of 144687
+
+    ✗ POST 201
+      ↳  56% — ✓ 21427 / ✗ 16231
+    ✗ GET 200
+      ↳  71% — ✓ 72193 / ✗ 29193
+    ✗ PUT 200 or 409
+      ↳  78% — ✓ 4411 / ✗ 1232
+
+    HTTP
+    http_req_duration..............: avg=3.43s p(50)=1.62s    p(95)=12.99s p(99)=23.25s max=27.46s
+      { expected_response:true }...: avg=2.16s p(50)=854.25ms p(95)=10.43s p(99)=14.03s max=20.93s
+      { scenario:mixed }...........: avg=5.13s p(50)=3.62s    p(95)=13.96s p(99)=24.36s max=27.46s
+    http_req_failed................: 32.24% 46656 out of 144687
+      { scenario:mixed }...........: 46.51% 42550 out of 91484
+    http_reqs......................: 144687 2740.538398/s
+
+    EXECUTION
+    dropped_iterations.............: 905540 17151.9704/s
+      { scenario:mixed }...........: 808562 15315.095402/s
+    iteration_duration.............: avg=4.19s p(50)=2.38s    p(95)=13.71s p(99)=23.37s max=30.01s
+    iterations.....................: 144687 2740.538398/s
+    vus............................: 110    min=110             max=20110
+    vus_max........................: 27427  min=12000           max=27427
+
+    NETWORK
+    data_received..................: 210 MB 4.0 MB/s
+    data_sent......................: 14 MB  273 kB/s
+
+
+
+time="2026-11-22T07:27:15Z" level=error msg="thresholds on metrics 'dropped_iterations{scenario:mixed}, http_req_duration{scenario:mixed}, http_req_failed{scenario:mixed}' have been crossed"

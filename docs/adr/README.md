@@ -27,6 +27,7 @@ Once accepted:
 | [0009](0009-testing-strategy.md) | Testing strategy | Accepted |
 | [0010](0010-defer-idempotency-key.md) | Defer Idempotency-Key | Accepted |
 | [0011](0011-cursor-pagination.md) | Cursor pagination for GET /tasks | Accepted |
+| [0012](0012-load-testing-and-profiling.md) | Load testing and profiling | Accepted |
 
 ## Template
 

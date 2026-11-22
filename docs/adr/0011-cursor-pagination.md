@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-22
+- **Amended:** 2026-11-22 — link: benchmark record moved to a per-task folder
 - **Supersedes:** the pagination row of [ADR-0004](0004-api-contract.md) "Out of scope" and its
   `GET /tasks` response; the `List` part of [ADR-0002](0002-in-memory-storage.md) Decision
 
@@ -9,7 +10,7 @@
 
 `GET /tasks` returned every task. Benchmarks (`make bench`; AMD Ryzen 7 9700X, Go 1.27.4,
 in-process, no network; full record in
-[docs/benchmark/2026-11-22-list-pagination.md](../benchmark/2026-11-22-list-pagination.md))
+[docs/benchmark/2026-11-22-list-pagination](../benchmark/2026-11-22-list-pagination/))
 measured the unpaginated endpoint:
 
 | Tasks | Latency | Response size | Allocated per request |

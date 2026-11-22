@@ -1,6 +1,6 @@
 # ADR-0008: Runtime and deployment
 
-- **Status:** Accepted
+- **Status:** Accepted; Configuration table superseded by [ADR-0012](0012-load-testing-and-profiling.md)
 - **Date:** 2026-11-21
 
 ## Context
