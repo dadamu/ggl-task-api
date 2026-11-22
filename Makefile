@@ -71,6 +71,10 @@ docker-build: ## Build the Docker image
 docker-run: docker-build ## Run the Docker image on :8080
 	docker run --rm -p 8080:8080 $(IMAGE)
 
+.PHONY: loadtest
+loadtest: docker-build ## Step load test with k6 against a resource-limited container
+	loadtest/run.sh
+
 .PHONY: clean
 clean: ## Remove build artifacts
 	rm -rf $(BIN_DIR) $(COVER_OUT)
