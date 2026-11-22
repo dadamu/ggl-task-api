@@ -24,8 +24,20 @@ import (
 	_ "github.com/dadamu/ggl-task-api/swagger" // swagger docs
 )
 
+// Server timeouts (ADR-0008).
+const (
+	readHeaderTimeout = 5 * time.Second  // mitigate Slowloris
+	readTimeout       = 10 * time.Second // headers + body
+	writeTimeout      = 10 * time.Second // handler + response
+	idleTimeout       = 60 * time.Second // keep-alive connections
+	shutdownTimeout   = 10 * time.Second // drain in-flight requests
+)
+
 func main() {
-	cfg := config.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
 	gin.SetMode(cfg.GinMode)
 
 	// Composition root: the only place that calls time.Now (ADR-0006).
@@ -33,8 +45,11 @@ func main() {
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           router.New(svc),
-		ReadHeaderTimeout: 5 * time.Second,
+		Handler:           router.New(svc, router.Options{Swagger: cfg.SwaggerEnabled}),
+		ReadHeaderTimeout: readHeaderTimeout,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       idleTimeout,
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -50,7 +65,7 @@ func main() {
 	<-ctx.Done()
 	log.Println("shutting down")
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("shutdown: %v", err)
