@@ -1,5 +1,6 @@
 APP            := server
 BIN_DIR        := bin
+IMAGE          := ggl-task-api:local
 LOCAL_BIN      := $(CURDIR)/$(BIN_DIR)/tools
 GOLANGCI_VER   := v2.15.0
 GOLANGCI_LINT  := $(LOCAL_BIN)/golangci-lint
@@ -57,6 +58,14 @@ tidy: ## Tidy go.mod
 
 .PHONY: check
 check: swag tidy fmt vet lint test ## Run all checks (CI)
+
+.PHONY: docker-build
+docker-build: ## Build the Docker image
+	docker build -t $(IMAGE) .
+
+.PHONY: docker-run
+docker-run: docker-build ## Run the Docker image on :8080
+	docker run --rm -p 8080:8080 $(IMAGE)
 
 .PHONY: clean
 clean: ## Remove build artifacts

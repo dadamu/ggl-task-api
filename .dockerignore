@@ -1,0 +1,10 @@
+# Keep the build context small and free of local artifacts.
+.git
+.github
+.vscode
+.idea
+bin/
+coverage.out
+*.pdf
+Dockerfile
+.dockerignore
