@@ -1,6 +1,6 @@
 # ADR-0007: Request idempotency via Idempotency-Key
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0010](0010-defer-idempotency-key.md) (not implemented)
 - **Date:** 2026-11-21
 
 ## Context

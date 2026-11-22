@@ -1,6 +1,6 @@
 # ADR-0009: Testing strategy
 
-- **Status:** Accepted
+- **Status:** Accepted; idempotency test rows superseded by [ADR-0010](0010-defer-idempotency-key.md)
 - **Date:** 2026-11-21
 
 ## Context
