@@ -3,6 +3,8 @@
 //   k6 run -e RATE=2000 -e DURATION=30s -e BASE_URL=http://localhost:8080 loadtest/tasks.js
 //
 // DURATION must be given in seconds (e.g. 30s).
+// GET_PAGE=first (default) always lists the first page; GET_PAGE=last lists the newest tasks by
+// passing after = (highest ID this VU has seen) - 20.
 // Mix per iteration: 70% GET /tasks, 20% POST /tasks, 10% PUT /tasks/{id}.
 // Each VU updates only tasks it created, so 409 conflicts are rare; a 409 is
 // still treated as an expected outcome of optimistic locking, not a failure.
@@ -13,6 +15,8 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 const RATE = Number(__ENV.RATE || 1000);
 const DURATION = __ENV.DURATION || '30s';
 const JSON_HEADERS = { headers: { 'Content-Type': 'application/json' } };
+const GET_PAGE = __ENV.GET_PAGE || 'first';
+const PAGE_SIZE = 20;
 
 http.setResponseCallback(http.expectedStatuses({ min: 200, max: 299 }, 409));
 
@@ -55,8 +59,25 @@ export const options = {
   summaryTrendStats: ['avg', 'p(50)', 'p(95)', 'p(99)', 'max'],
 };
 
-// Per-VU state: the last task this VU created and its current version.
+// Per-VU state: the last task this VU created and its current version, and the
+// highest task ID this VU has seen (approximates the newest task for GET_PAGE=last).
 let mine = null;
+let maxSeenID = 0;
+
+function seen(id) {
+  if (id > maxSeenID) maxSeenID = id;
+}
+
+function list() {
+  const after = GET_PAGE === 'last' ? Math.max(0, maxSeenID - PAGE_SIZE) : 0;
+  const url = after > 0 ? `${BASE_URL}/tasks?after=${after}` : `${BASE_URL}/tasks`;
+  const res = http.get(url, { tags: { name: 'GET /tasks' } });
+  // PARSE_GET=1 parses the body in first-page mode too: a control for client-side parsing cost.
+  if (check(res, { 'GET 200': (x) => x.status === 200 }) && (GET_PAGE === 'last' || __ENV.PARSE_GET === '1')) {
+    const data = res.json().data;
+    if (data.length > 0) seen(data[data.length - 1].id);
+  }
+}
 
 function create() {
   const res = http.post(`${BASE_URL}/tasks`, JSON.stringify({ name: `load ${__VU}-${__ITER}` }), {
@@ -66,6 +87,7 @@ function create() {
   if (check(res, { 'POST 201': (r) => r.status === 201 })) {
     const t = res.json();
     mine = { id: t.id, version: t.version };
+    seen(t.id);
   }
 }
 
@@ -90,8 +112,7 @@ function update() {
 export default function () {
   const r = Math.random();
   if (r < 0.7) {
-    const res = http.get(`${BASE_URL}/tasks`, { tags: { name: 'GET /tasks' } });
-    check(res, { 'GET 200': (x) => x.status === 200 });
+    list();
   } else if (r < 0.9) {
     create();
   } else {
