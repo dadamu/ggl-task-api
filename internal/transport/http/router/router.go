@@ -17,8 +17,14 @@ import (
 // MaxBodyBytes is the maximum request body size (ADR-0004).
 const MaxBodyBytes = 1 << 20 // 1 MB
 
+// Options configures optional routes.
+type Options struct {
+	// Swagger registers /swagger/* (ADR-0008). Disable it in production.
+	Swagger bool
+}
+
 // New returns a gin engine with all routes registered.
-func New(svc *app.Service) *gin.Engine {
+func New(svc *app.Service, opts Options) *gin.Engine {
 	r := gin.New()
 	r.HandleMethodNotAllowed = true // 405 instead of 404 for a known path
 	r.RedirectTrailingSlash = false // /tasks/ is a 404, not a redirect
@@ -32,7 +38,9 @@ func New(svc *app.Service) *gin.Engine {
 	})
 
 	r.GET("/healthz", handler.Health)
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	if opts.Swagger {
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 
 	tasks := handler.NewTask(svc)
 	r.GET("/tasks", tasks.List)

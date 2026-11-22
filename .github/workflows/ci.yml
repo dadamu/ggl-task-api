@@ -42,3 +42,21 @@ jobs:
 
       - name: Build
         run: make build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build image
+        run: make docker-build
+
+      - name: Smoke test
+        run: |
+          docker run -d --name api -p 8080:8080 ggl-task-api:local
+          trap 'docker logs api; docker rm -f api' EXIT
+          # --retry-all-errors also retries connection resets while the container starts
+          curl -fsS --retry 10 --retry-all-errors --retry-delay 1 http://localhost:8080/healthz
+          curl -fsS -X POST http://localhost:8080/tasks \
+            -H 'Content-Type: application/json' -d '{"name":"smoke"}'
+          curl -fsS http://localhost:8080/tasks | grep -q '"name":"smoke"'

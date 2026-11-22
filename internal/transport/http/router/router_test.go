@@ -24,7 +24,7 @@ import (
 func init() { gin.SetMode(gin.TestMode) }
 
 func newRouter() http.Handler {
-	return router.New(app.NewService(memory.NewTaskRepository(), time.Now))
+	return router.New(app.NewService(memory.NewTaskRepository(), time.Now), router.Options{Swagger: true})
 }
 
 func do(t *testing.T, h http.Handler, method, path, body string) *httptest.ResponseRecorder {
@@ -111,7 +111,7 @@ func TestBodyLimitIsApplied(t *testing.T) {
 // Verifies Recovery is attached; its behavior is tested in the middleware package.
 func TestRecoveryIsApplied(t *testing.T) {
 	gin.DefaultErrorWriter = io.Discard // keep the expected stack trace out of test output
-	r := router.New(app.NewService(memory.NewTaskRepository(), time.Now))
+	r := router.New(app.NewService(memory.NewTaskRepository(), time.Now), router.Options{Swagger: true})
 	r.GET("/panic", func(*gin.Context) { panic("boom") })
 
 	requireRouterError(t, do(t, r, http.MethodGet, "/panic", ""), http.StatusInternalServerError, apierror.CodeInternal)
@@ -141,4 +141,10 @@ func TestMethodNotAllowed(t *testing.T) {
 			require.Equal(t, tt.wantAllow, rec.Header().Get("Allow"))
 		})
 	}
+}
+
+func TestSwaggerCanBeDisabled(t *testing.T) {
+	r := router.New(app.NewService(memory.NewTaskRepository(), time.Now), router.Options{Swagger: false})
+
+	requireRouterError(t, do(t, r, http.MethodGet, "/swagger/index.html", ""), http.StatusNotFound, apierror.CodeRouteNotFound)
 }
