@@ -36,6 +36,10 @@ cover coverage: ## Coverage report for internal/ (excludes cmd/ and generated sw
 	go test -race -count=1 -covermode=atomic -coverpkg=./internal/... -coverprofile=$(COVER_OUT) ./internal/...
 	go tool cover -func=$(COVER_OUT)
 
+.PHONY: bench
+bench: ## Run benchmarks
+	go test -run='^$$' -bench=. -benchmem ./internal/...
+
 .PHONY: fmt
 fmt: $(GOLANGCI_LINT) ## Format code
 	$(GOLANGCI_LINT) fmt ./...

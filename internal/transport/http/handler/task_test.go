@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -21,7 +22,7 @@ func TestListEmpty(t *testing.T) {
 	rec := do(t, newServer(t), http.MethodGet, "/tasks", "")
 
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.JSONEq(t, `{"data":[]}`, rec.Body.String())
+	require.JSONEq(t, `{"data":[],"next_cursor":null}`, rec.Body.String())
 }
 
 func TestListOrderedByID(t *testing.T) {
@@ -35,6 +36,105 @@ func TestListOrderedByID(t *testing.T) {
 	list := decode[dto.TaskList](t, rec)
 	require.Len(t, list.Data, 2)
 	require.Equal(t, []string{"a", "b"}, []string{list.Data[0].Name, list.Data[1].Name})
+}
+
+func TestListPagination(t *testing.T) {
+	h := newServer(t)
+	for i := range 25 {
+		create(t, h, `{"name":"t`+strconv.Itoa(i)+`"}`)
+	}
+	pageIDs := func(l dto.TaskList) []int64 {
+		out := make([]int64, len(l.Data))
+		for i, tk := range l.Data {
+			out[i] = tk.ID
+		}
+		return out
+	}
+	idRange := func(from, to int64) []int64 {
+		var out []int64
+		for id := from; id <= to; id++ {
+			out = append(out, id)
+		}
+		return out
+	}
+	cursor := func(id int64) *int64 { return &id }
+
+	tests := []struct {
+		name     string
+		query    string
+		wantIDs  []int64
+		wantNext *int64
+	}{
+		{"default page size is 20", "", idRange(1, 20), cursor(20)},
+		{"explicit limit", "?limit=5", idRange(1, 5), cursor(5)},
+		{"after cursor", "?limit=5&after=5", idRange(6, 10), cursor(10)},
+		{"last page", "?after=20", idRange(21, 25), nil},
+		{"max limit returns everything here", "?limit=100", idRange(1, 25), nil},
+		{"after the last task", "?after=25", []int64{}, nil},
+		{"unknown query parameters are ignored", "?limit=2&foo=bar", idRange(1, 2), cursor(2)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := do(t, h, http.MethodGet, "/tasks"+tt.query, "")
+
+			require.Equal(t, http.StatusOK, rec.Code)
+			list := decode[dto.TaskList](t, rec)
+			require.Equal(t, tt.wantIDs, pageIDs(list))
+			require.Equal(t, tt.wantNext, list.NextCursor)
+		})
+	}
+}
+
+func TestListFollowingNextCursorVisitsEveryTaskOnce(t *testing.T) {
+	h := newServer(t)
+	for i := range 23 {
+		create(t, h, `{"name":"t`+strconv.Itoa(i)+`"}`)
+	}
+
+	var seen []int64
+	query := "/tasks?limit=7"
+	for pages := 0; ; pages++ {
+		require.Less(t, pages, 10, "pagination must terminate")
+		list := decode[dto.TaskList](t, do(t, h, http.MethodGet, query, ""))
+		for _, tk := range list.Data {
+			seen = append(seen, tk.ID)
+		}
+		if list.NextCursor == nil {
+			break
+		}
+		query = "/tasks?limit=7&after=" + strconv.FormatInt(*list.NextCursor, 10)
+	}
+
+	require.Len(t, seen, 23)
+	require.IsIncreasing(t, seen)
+}
+
+func TestListInvalidQuery(t *testing.T) {
+	limitReason := apierror.FieldDetail{Field: "limit", Reason: "must be an integer between 1 and 100"}
+	afterReason := apierror.FieldDetail{Field: "after", Reason: "must be a non-negative integer"}
+
+	tests := []struct {
+		query       string
+		wantDetails []apierror.FieldDetail
+	}{
+		{"?limit=0", []apierror.FieldDetail{limitReason}},
+		{"?limit=101", []apierror.FieldDetail{limitReason}},
+		{"?limit=-1", []apierror.FieldDetail{limitReason}},
+		{"?limit=abc", []apierror.FieldDetail{limitReason}},
+		{"?limit=", []apierror.FieldDetail{limitReason}},
+		{"?after=-1", []apierror.FieldDetail{afterReason}},
+		{"?after=abc", []apierror.FieldDetail{afterReason}},
+		{"?after=99999999999999999999", []apierror.FieldDetail{afterReason}},
+		{"?limit=0&after=x", []apierror.FieldDetail{limitReason, afterReason}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.query, func(t *testing.T) {
+			rec := do(t, newServer(t), http.MethodGet, "/tasks"+tt.query, "")
+
+			body := requireError(t, rec, http.StatusBadRequest, apierror.CodeValidationFailed)
+			require.Equal(t, tt.wantDetails, body.Details)
+		})
+	}
 }
 
 // --- POST /tasks ---
@@ -121,7 +221,7 @@ func TestCreateValidation(t *testing.T) {
 
 			body := requireError(t, rec, http.StatusBadRequest, tt.wantCode)
 			require.Equal(t, tt.wantDetails, body.Details)
-			require.JSONEq(t, `{"data":[]}`, do(t, h, http.MethodGet, "/tasks", "").Body.String(), "nothing stored")
+			require.JSONEq(t, `{"data":[],"next_cursor":null}`, do(t, h, http.MethodGet, "/tasks", "").Body.String(), "nothing stored")
 		})
 	}
 }
@@ -246,7 +346,7 @@ func TestDelete(t *testing.T) {
 	require.Equal(t, http.StatusNoContent, rec.Code)
 	require.Empty(t, rec.Body.String())
 	requireError(t, do(t, h, http.MethodDelete, "/tasks/1", ""), http.StatusNotFound, apierror.CodeTaskNotFound)
-	require.JSONEq(t, `{"data":[]}`, do(t, h, http.MethodGet, "/tasks", "").Body.String())
+	require.JSONEq(t, `{"data":[],"next_cursor":null}`, do(t, h, http.MethodGet, "/tasks", "").Body.String())
 }
 
 func TestDeleteInvalidID(t *testing.T) {
@@ -257,7 +357,7 @@ func TestDeleteInvalidID(t *testing.T) {
 
 type failingListRepo struct{ task.Repository }
 
-func (failingListRepo) List(context.Context) ([]task.Task, error) {
+func (failingListRepo) List(context.Context, task.ListQuery) ([]task.Task, error) {
 	return nil, errors.New("secret internal detail")
 }
 

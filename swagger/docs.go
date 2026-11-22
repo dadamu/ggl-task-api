@@ -36,6 +36,7 @@ const docTemplate = `{
         },
         "/tasks": {
             "get": {
+                "description": "Cursor pagination: pass next_cursor as \"after\" to get the next page.",
                 "produces": [
                     "application/json"
                 ],
@@ -43,11 +44,36 @@ const docTemplate = `{
                     "tasks"
                 ],
                 "summary": "List tasks",
+                "parameters": [
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Page size",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Return tasks with id greater than this cursor",
+                        "name": "after",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Tasks ordered by id ascending",
+                        "description": "One page of tasks ordered by id ascending",
                         "schema": {
                             "$ref": "#/definitions/dto.TaskList"
+                        }
+                    },
+                    "400": {
+                        "description": "VALIDATION_FAILED for limit or after",
+                        "schema": {
+                            "$ref": "#/definitions/apierror.Response"
                         }
                     },
                     "500": {
@@ -349,6 +375,11 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/dto.Task"
                     }
+                },
+                "next_cursor": {
+                    "description": "NextCursor is the value to pass as \"after\" for the next page; null on the last page.",
+                    "type": "integer",
+                    "example": 20
                 }
             }
         },

@@ -2,9 +2,7 @@
 package memory
 
 import (
-	"cmp"
 	"context"
-	"slices"
 	"sync"
 
 	"github.com/dadamu/ggl-task-api/internal/domain/task"
@@ -61,21 +59,26 @@ func (r *TaskRepository) Get(ctx context.Context, id int64) (task.Task, error) {
 	return t, nil
 }
 
-// List returns a consistent snapshot of all tasks ordered by ID ascending.
-// The result is never nil.
-func (r *TaskRepository) List(ctx context.Context) ([]task.Task, error) {
+// List returns up to q.Limit tasks with ID greater than q.After, ordered by ID,
+// from a consistent snapshot. The result is never nil.
+//
+// IDs are assigned by an increasing counter and never reused (ADR-0002), so
+// walking IDs upward from q.After yields tasks already in order: no full scan
+// and no sort. Cost is O(limit + deleted IDs skipped), independent of the total
+// number of tasks in the common case.
+func (r *TaskRepository) List(ctx context.Context, q task.ListQuery) ([]task.Task, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	r.mu.RLock()
-	out := make([]task.Task, 0, len(r.tasks))
-	for _, t := range r.tasks {
-		out = append(out, t)
-	}
-	r.mu.RUnlock()
+	defer r.mu.RUnlock()
 
-	// Sorting a private copy does not need the lock.
-	slices.SortFunc(out, func(a, b task.Task) int { return cmp.Compare(a.ID, b.ID) })
+	out := make([]task.Task, 0, min(q.Limit, len(r.tasks)))
+	for id := max(q.After, 0) + 1; id <= r.lastID && len(out) < q.Limit; id++ {
+		if t, ok := r.tasks[id]; ok {
+			out = append(out, t)
+		}
+	}
 	return out, nil
 }
 

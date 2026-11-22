@@ -32,9 +32,11 @@ type Task struct {
 	UpdatedAt time.Time `json:"updated_at" example:"2026-11-21T08:00:00.123Z"`
 }
 
-// TaskList is the body of GET /tasks.
+// TaskList is the body of GET /tasks: one page of tasks ordered by id.
 type TaskList struct {
 	Data []Task `json:"data"`
+	// NextCursor is the value to pass as "after" for the next page; null on the last page.
+	NextCursor *int64 `json:"next_cursor" example:"20"`
 }
 
 // FromTask converts a domain task to its JSON representation.
@@ -49,11 +51,11 @@ func FromTask(t task.Task) Task {
 	}
 }
 
-// FromTasks converts domain tasks; the result is never nil, so it encodes as [].
-func FromTasks(ts []task.Task) TaskList {
+// FromTasks converts one page of domain tasks; Data is never nil, so it encodes as [].
+func FromTasks(ts []task.Task, nextCursor *int64) TaskList {
 	out := make([]Task, 0, len(ts))
 	for _, t := range ts {
 		out = append(out, FromTask(t))
 	}
-	return TaskList{Data: out}
+	return TaskList{Data: out, NextCursor: nextCursor}
 }

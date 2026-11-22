@@ -1,6 +1,6 @@
 # ADR-0002: In-memory storage with map and RWMutex
 
-- **Status:** Accepted
+- **Status:** Accepted; `List` implementation superseded by [ADR-0011](0011-cursor-pagination.md)
 - **Date:** 2026-11-21
 
 ## Context

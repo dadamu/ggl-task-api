@@ -2,6 +2,7 @@ package memory_test
 
 import (
 	"context"
+	"math"
 	"strconv"
 	"sync"
 	"testing"
@@ -14,6 +15,9 @@ import (
 )
 
 var now = time.Date(2026, 11, 21, 8, 0, 0, 0, time.UTC)
+
+// all lists every task in one page.
+var all = task.ListQuery{Limit: math.MaxInt}
 
 func newTask(t *testing.T, name string) task.Task {
 	t.Helper()
@@ -80,7 +84,7 @@ func TestReturnedValuesAreCopies(t *testing.T) {
 	repo := memory.NewTaskRepository()
 	created := mustCreate(t, repo, "original")
 
-	listed, err := repo.List(t.Context())
+	listed, err := repo.List(t.Context(), all)
 	require.NoError(t, err)
 	listed[0].Name = "mutated"
 
@@ -143,10 +147,36 @@ func TestList(t *testing.T) {
 				require.NoError(t, repo.Delete(t.Context(), id))
 			}
 
-			got, err := repo.List(t.Context())
+			got, err := repo.List(t.Context(), all)
 
 			require.NoError(t, err)
 			require.NotNil(t, got)
+			require.Equal(t, tt.wantIDs, ids(got))
+		})
+	}
+}
+
+func TestListQuery(t *testing.T) {
+	tests := []struct {
+		name    string
+		q       task.ListQuery
+		wantIDs []int64
+	}{
+		{"limit from start", task.ListQuery{Limit: 2}, []int64{1, 2}},
+		{"after excludes the cursor id", task.ListQuery{After: 2, Limit: 2}, []int64{4, 5}}, // 3 deleted
+		{"after a deleted id", task.ListQuery{After: 3, Limit: 10}, []int64{4, 5}},
+		{"after the last id", task.ListQuery{After: 5, Limit: 10}, []int64{}},
+		{"limit larger than remaining", task.ListQuery{After: 1, Limit: 10}, []int64{2, 4, 5}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := memory.NewTaskRepository()
+			seed(t, repo, 5)
+			require.NoError(t, repo.Delete(t.Context(), 3))
+
+			got, err := repo.List(t.Context(), tt.q)
+
+			require.NoError(t, err)
 			require.Equal(t, tt.wantIDs, ids(got))
 		})
 	}
@@ -228,7 +258,7 @@ func TestDelete(t *testing.T) {
 				_, getErr := repo.Get(t.Context(), tt.id)
 				require.ErrorIs(t, getErr, task.ErrNotFound)
 			}
-			got, err := repo.List(t.Context())
+			got, err := repo.List(t.Context(), all)
 			require.NoError(t, err)
 			require.Equal(t, tt.wantIDs, ids(got))
 		})
@@ -245,7 +275,7 @@ func TestCanceledContext(t *testing.T) {
 	require.ErrorIs(t, err, context.Canceled)
 	_, err = repo.Get(ctx, created.ID)
 	require.ErrorIs(t, err, context.Canceled)
-	_, err = repo.List(ctx)
+	_, err = repo.List(ctx, all)
 	require.ErrorIs(t, err, context.Canceled)
 	_, err = repo.Update(ctx, created, created.Version)
 	require.ErrorIs(t, err, context.Canceled)
@@ -253,7 +283,7 @@ func TestCanceledContext(t *testing.T) {
 
 	// Canceled calls must not change state.
 	requireStored(t, repo, created)
-	listed, err := repo.List(t.Context())
+	listed, err := repo.List(t.Context(), all)
 	require.NoError(t, err)
 	require.Len(t, listed, 1)
 }
@@ -291,7 +321,7 @@ func TestConcurrentCreatesHaveUniqueIDs(t *testing.T) {
 		require.False(t, seen[created[i].ID], "duplicate id %d", created[i].ID)
 		seen[created[i].ID] = true
 	}
-	listed, err := repo.List(t.Context())
+	listed, err := repo.List(t.Context(), all)
 	require.NoError(t, err)
 	require.Len(t, listed, n)
 }

@@ -46,9 +46,33 @@ func (s *Service) Create(ctx context.Context, in CreateInput) (task.Task, error)
 	return s.repo.Create(ctx, t)
 }
 
-// List returns all tasks ordered by ID ascending.
-func (s *Service) List(ctx context.Context) ([]task.Task, error) {
-	return s.repo.List(ctx)
+// ListInput selects a page of tasks. Limit must be positive; the transport
+// layer applies the default and the maximum.
+type ListInput struct {
+	After int64 // cursor: return tasks with ID greater than After
+	Limit int
+}
+
+// Page is one page of tasks ordered by ID ascending.
+type Page struct {
+	Tasks []task.Task
+	// NextCursor is the After value for the next page, or nil on the last page.
+	NextCursor *int64
+}
+
+// List returns one page of tasks. It asks the repository for one extra task
+// to tell whether another page exists.
+func (s *Service) List(ctx context.Context, in ListInput) (Page, error) {
+	tasks, err := s.repo.List(ctx, task.ListQuery{After: in.After, Limit: in.Limit + 1})
+	if err != nil {
+		return Page{}, err
+	}
+	if len(tasks) <= in.Limit {
+		return Page{Tasks: tasks}, nil
+	}
+	tasks = tasks[:in.Limit]
+	next := tasks[len(tasks)-1].ID
+	return Page{Tasks: tasks, NextCursor: &next}, nil
 }
 
 // Update replaces the name and status of a task (full replacement).
