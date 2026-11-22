@@ -1,0 +1,51 @@
+# Before pagination: GET /tasks returned every task; repository copied all tasks and sorted them.
+# go test -run='^$' -bench='BenchmarkList$|BenchmarkListTasksHTTP' -benchmem -count=5
+# go version go1.27.4 linux/amd64; Model name: AMD Ryzen 7 9700X 8-Core Processor; 16 threads; WSL2
+goos: linux
+goarch: amd64
+pkg: github.com/dadamu/ggl-task-api/internal/infrastructures/persistence/memory
+cpu: AMD Ryzen 7 9700X 8-Core Processor             
+BenchmarkList/n=100-16         	  145830	      7388 ns/op	    9472 B/op	       1 allocs/op
+BenchmarkList/n=100-16         	  171832	      7181 ns/op	    9472 B/op	       1 allocs/op
+BenchmarkList/n=100-16         	  165546	      7359 ns/op	    9472 B/op	       1 allocs/op
+BenchmarkList/n=100-16         	  167152	      7157 ns/op	    9472 B/op	       1 allocs/op
+BenchmarkList/n=100-16         	  164780	      7163 ns/op	    9472 B/op	       1 allocs/op
+BenchmarkList/n=1000-16        	   10000	    111440 ns/op	   90112 B/op	       1 allocs/op
+BenchmarkList/n=1000-16        	   10000	    109711 ns/op	   90113 B/op	       1 allocs/op
+BenchmarkList/n=1000-16        	   10000	    110072 ns/op	   90113 B/op	       1 allocs/op
+BenchmarkList/n=1000-16        	   10000	    109615 ns/op	   90113 B/op	       1 allocs/op
+BenchmarkList/n=1000-16        	   10000	    110472 ns/op	   90112 B/op	       1 allocs/op
+BenchmarkList/n=10000-16       	     816	   1427306 ns/op	  884738 B/op	       1 allocs/op
+BenchmarkList/n=10000-16       	     800	   1468035 ns/op	  884737 B/op	       1 allocs/op
+BenchmarkList/n=10000-16       	     836	   1424129 ns/op	  884739 B/op	       1 allocs/op
+BenchmarkList/n=10000-16       	     841	   1416444 ns/op	  884738 B/op	       1 allocs/op
+BenchmarkList/n=10000-16       	     834	   1447886 ns/op	  884739 B/op	       1 allocs/op
+BenchmarkList/n=100000-16      	      64	  17213318 ns/op	 8806750 B/op	       1 allocs/op
+BenchmarkList/n=100000-16      	      70	  17367071 ns/op	 8806404 B/op	       1 allocs/op
+BenchmarkList/n=100000-16      	      70	  16795678 ns/op	 8806400 B/op	       1 allocs/op
+BenchmarkList/n=100000-16      	      61	  16597919 ns/op	 8806495 B/op	       1 allocs/op
+BenchmarkList/n=100000-16      	      66	  16731185 ns/op	 8806405 B/op	       1 allocs/op
+goos: linux
+goarch: amd64
+pkg: github.com/dadamu/ggl-task-api/internal/transport/http/router
+cpu: AMD Ryzen 7 9700X 8-Core Processor             
+BenchmarkListTasksHTTP/n=100-16         	   38023	     31928 ns/op	     12192 resp_bytes	   50193 B/op	      35 allocs/op
+BenchmarkListTasksHTTP/n=100-16         	   36716	     32289 ns/op	     12192 resp_bytes	   50188 B/op	      35 allocs/op
+BenchmarkListTasksHTTP/n=100-16         	   37708	     31960 ns/op	     12192 resp_bytes	   50219 B/op	      35 allocs/op
+BenchmarkListTasksHTTP/n=100-16         	   37738	     32131 ns/op	     12192 resp_bytes	   50186 B/op	      35 allocs/op
+BenchmarkListTasksHTTP/n=100-16         	   37945	     32205 ns/op	     12192 resp_bytes	   50193 B/op	      35 allocs/op
+BenchmarkListTasksHTTP/n=1000-16        	    3595	    331455 ns/op	    123793 resp_bytes	  467575 B/op	      36 allocs/op
+BenchmarkListTasksHTTP/n=1000-16        	    3685	    330745 ns/op	    123793 resp_bytes	  468244 B/op	      36 allocs/op
+BenchmarkListTasksHTTP/n=1000-16        	    3349	    347134 ns/op	    123793 resp_bytes	  467846 B/op	      36 allocs/op
+BenchmarkListTasksHTTP/n=1000-16        	    3576	    337383 ns/op	    123793 resp_bytes	  467093 B/op	      36 allocs/op
+BenchmarkListTasksHTTP/n=1000-16        	    3699	    330926 ns/op	    123793 resp_bytes	  468452 B/op	      36 allocs/op
+BenchmarkListTasksHTTP/n=10000-16       	     302	   3866661 ns/op	   1257794 resp_bytes	 6723045 B/op	      54 allocs/op
+BenchmarkListTasksHTTP/n=10000-16       	     316	   3776948 ns/op	   1257794 resp_bytes	 6405336 B/op	      52 allocs/op
+BenchmarkListTasksHTTP/n=10000-16       	     314	   3813620 ns/op	   1257794 resp_bytes	 6609264 B/op	      53 allocs/op
+BenchmarkListTasksHTTP/n=10000-16       	     302	   3886014 ns/op	   1257794 resp_bytes	 6282725 B/op	      51 allocs/op
+BenchmarkListTasksHTTP/n=10000-16       	     307	   3789079 ns/op	   1257794 resp_bytes	 6380398 B/op	      52 allocs/op
+BenchmarkListTasksHTTP/n=100000-16      	      27	  43083853 ns/op	  12777795 resp_bytes	79560360 B/op	      74 allocs/op
+BenchmarkListTasksHTTP/n=100000-16      	      25	  43746962 ns/op	  12777795 resp_bytes	82469167 B/op	      74 allocs/op
+BenchmarkListTasksHTTP/n=100000-16      	      27	  43067433 ns/op	  12777795 resp_bytes	81985110 B/op	      75 allocs/op
+BenchmarkListTasksHTTP/n=100000-16      	      26	  43984441 ns/op	  12777795 resp_bytes	80958587 B/op	      73 allocs/op
+BenchmarkListTasksHTTP/n=100000-16      	      27	  42920218 ns/op	  12777795 resp_bytes	81984415 B/op	      74 allocs/op

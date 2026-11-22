@@ -1,0 +1,95 @@
+# go test -run='^$' -bench=. -benchmem -count=5 ./internal/...
+# go version go1.27.4 linux/amd64; Model name: AMD Ryzen 7 9700X 8-Core Processor; 16 threads; WSL2
+goos: linux
+goarch: amd64
+pkg: github.com/dadamu/ggl-task-api/internal/infrastructures/persistence/memory
+cpu: AMD Ryzen 7 9700X 8-Core Processor             
+BenchmarkList/n=100/all-16         	  522204	      2273 ns/op	    9472 B/op	       1 allocs/op
+BenchmarkList/n=100/all-16         	  555068	      2243 ns/op	    9472 B/op	       1 allocs/op
+BenchmarkList/n=100/all-16         	  557242	      2340 ns/op	    9472 B/op	       1 allocs/op
+BenchmarkList/n=100/all-16         	  500491	      2366 ns/op	    9472 B/op	       1 allocs/op
+BenchmarkList/n=100/all-16         	  499580	      2286 ns/op	    9472 B/op	       1 allocs/op
+BenchmarkList/n=100/page20_head-16 	 2573313	       467.4 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100/page20_head-16 	 2579269	       469.7 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100/page20_head-16 	 2519233	       474.5 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100/page20_head-16 	 2583192	       470.9 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100/page20_head-16 	 2464167	       478.9 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100/page20_mid-16  	 2456944	       479.4 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100/page20_mid-16  	 2427362	       482.8 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100/page20_mid-16  	 2510113	       474.7 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100/page20_mid-16  	 2516306	       475.5 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100/page20_mid-16  	 2540736	       476.7 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=1000/all-16        	   49400	     24326 ns/op	   90112 B/op	       1 allocs/op
+BenchmarkList/n=1000/all-16        	   50533	     24240 ns/op	   90112 B/op	       1 allocs/op
+BenchmarkList/n=1000/all-16        	   49347	     24324 ns/op	   90112 B/op	       1 allocs/op
+BenchmarkList/n=1000/all-16        	   49029	     24420 ns/op	   90112 B/op	       1 allocs/op
+BenchmarkList/n=1000/all-16        	   49461	     24187 ns/op	   90112 B/op	       1 allocs/op
+BenchmarkList/n=1000/page20_head-16         	 2394943	       511.7 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=1000/page20_head-16         	 2347820	       516.9 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=1000/page20_head-16         	 2424346	       501.7 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=1000/page20_head-16         	 2356624	       510.5 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=1000/page20_head-16         	 2370092	       506.6 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=1000/page20_mid-16          	 2369331	       506.1 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=1000/page20_mid-16          	 2379913	       515.5 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=1000/page20_mid-16          	 2317965	       515.6 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=1000/page20_mid-16          	 2280840	       510.4 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=1000/page20_mid-16          	 2345474	       507.6 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=10000/all-16                	    4492	    263621 ns/op	  884736 B/op	       1 allocs/op
+BenchmarkList/n=10000/all-16                	    3967	    309220 ns/op	  884737 B/op	       1 allocs/op
+BenchmarkList/n=10000/all-16                	    4188	    278606 ns/op	  884737 B/op	       1 allocs/op
+BenchmarkList/n=10000/all-16                	    4396	    268794 ns/op	  884737 B/op	       1 allocs/op
+BenchmarkList/n=10000/all-16                	    4158	    268382 ns/op	  884737 B/op	       1 allocs/op
+BenchmarkList/n=10000/page20_head-16        	 2185158	       554.3 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=10000/page20_head-16        	 2144512	       554.7 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=10000/page20_head-16        	 2178170	       551.0 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=10000/page20_head-16        	 2225869	       546.8 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=10000/page20_head-16        	 2227742	       547.7 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=10000/page20_mid-16         	 2199433	       555.6 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=10000/page20_mid-16         	 2105478	       562.1 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=10000/page20_mid-16         	 2195949	       550.7 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=10000/page20_mid-16         	 2127504	       565.4 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=10000/page20_mid-16         	 2148824	       555.7 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100000/all-16               	     370	   3289158 ns/op	 8806417 B/op	       1 allocs/op
+BenchmarkList/n=100000/all-16               	     330	   3334242 ns/op	 8806401 B/op	       1 allocs/op
+BenchmarkList/n=100000/all-16               	     291	   4001907 ns/op	 8806401 B/op	       1 allocs/op
+BenchmarkList/n=100000/all-16               	     307	   3676911 ns/op	 8806401 B/op	       1 allocs/op
+BenchmarkList/n=100000/all-16               	     291	   3850147 ns/op	 8806421 B/op	       1 allocs/op
+BenchmarkList/n=100000/page20_head-16       	 3407871	       353.3 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100000/page20_head-16       	 3303493	       355.9 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100000/page20_head-16       	 3477829	       347.5 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100000/page20_head-16       	 3349052	       350.3 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100000/page20_head-16       	 3360262	       345.6 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100000/page20_mid-16        	 3362665	       359.1 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100000/page20_mid-16        	 3211326	       361.6 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100000/page20_mid-16        	 3239082	       362.9 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100000/page20_mid-16        	 3291096	       371.4 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkList/n=100000/page20_mid-16        	 3201700	       365.2 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkListSparse-16                      	     535	   2222796 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkListSparse-16                      	     531	   2263616 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkListSparse-16                      	     526	   2273952 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkListSparse-16                      	     532	   2253842 ns/op	    1792 B/op	       1 allocs/op
+BenchmarkListSparse-16                      	     528	   2246879 ns/op	    1792 B/op	       1 allocs/op
+goos: linux
+goarch: amd64
+pkg: github.com/dadamu/ggl-task-api/internal/transport/http/router
+cpu: AMD Ryzen 7 9700X 8-Core Processor             
+BenchmarkListTasksHTTP/n=100-16         	  148935	      7926 ns/op	      2448 resp_bytes	   15723 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=100-16         	  148714	      8347 ns/op	      2448 resp_bytes	   15724 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=100-16         	  155659	      8222 ns/op	      2448 resp_bytes	   15724 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=100-16         	  153507	      7939 ns/op	      2448 resp_bytes	   15722 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=100-16         	  150601	      8015 ns/op	      2448 resp_bytes	   15722 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=1000-16        	  153926	      8114 ns/op	      2448 resp_bytes	   15722 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=1000-16        	  143668	      7892 ns/op	      2448 resp_bytes	   15722 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=1000-16        	  154452	      8645 ns/op	      2448 resp_bytes	   15722 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=1000-16        	  110546	      9135 ns/op	      2448 resp_bytes	   15723 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=1000-16        	  148825	      8021 ns/op	      2448 resp_bytes	   15723 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=10000-16       	  149700	      8052 ns/op	      2448 resp_bytes	   15720 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=10000-16       	  150568	      8037 ns/op	      2448 resp_bytes	   15719 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=10000-16       	  144159	      7949 ns/op	      2448 resp_bytes	   15718 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=10000-16       	  157693	      8068 ns/op	      2448 resp_bytes	   15720 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=10000-16       	  143901	      7871 ns/op	      2448 resp_bytes	   15719 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=100000-16      	  140269	      7879 ns/op	      2448 resp_bytes	   15709 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=100000-16      	  147870	      7863 ns/op	      2448 resp_bytes	   15708 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=100000-16      	  141442	      7898 ns/op	      2448 resp_bytes	   15708 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=100000-16      	  146562	      7876 ns/op	      2448 resp_bytes	   15709 B/op	      37 allocs/op
+BenchmarkListTasksHTTP/n=100000-16      	  144942	      8191 ns/op	      2448 resp_bytes	   15709 B/op	      37 allocs/op
