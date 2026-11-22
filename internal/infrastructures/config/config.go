@@ -12,6 +12,10 @@ type Config struct {
 	Port           string
 	GinMode        string
 	SwaggerEnabled bool
+	// PprofEnabled starts a separate net/http/pprof server on PprofAddr.
+	// Off by default; never expose it publicly.
+	PprofEnabled bool
+	PprofAddr    string
 }
 
 // Load reads configuration from environment variables with defaults.
@@ -22,10 +26,16 @@ func Load() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	pprof, err := getBool("PPROF_ENABLED", false)
+	if err != nil {
+		return Config{}, err
+	}
 	return Config{
 		Port:           getEnv("PORT", "8080"),
 		GinMode:        getEnv("GIN_MODE", "debug"),
 		SwaggerEnabled: swagger,
+		PprofEnabled:   pprof,
+		PprofAddr:      getEnv("PPROF_ADDR", "localhost:6060"),
 	}, nil
 }
 

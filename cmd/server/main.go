@@ -55,19 +55,27 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	go func() {
-		log.Printf("listening on %s", srv.Addr)
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("listen: %v", err)
-		}
-	}()
+	servers := []*http.Server{srv}
+	if cfg.PprofEnabled {
+		servers = append(servers, newPprofServer(cfg.PprofAddr))
+	}
+	for _, s := range servers {
+		go func() {
+			log.Printf("listening on %s", s.Addr)
+			if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				log.Fatalf("listen: %v", err)
+			}
+		}()
+	}
 
 	<-ctx.Done()
 	log.Println("shutting down")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Printf("shutdown: %v", err)
+	for _, s := range servers {
+		if err := s.Shutdown(shutdownCtx); err != nil {
+			log.Printf("shutdown %s: %v", s.Addr, err)
+		}
 	}
 }
