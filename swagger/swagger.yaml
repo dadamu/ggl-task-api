@@ -1,5 +1,101 @@
 basePath: /
 definitions:
+  apierror.Body:
+    properties:
+      code:
+        example: VALIDATION_FAILED
+        type: string
+      current:
+        allOf:
+        - $ref: '#/definitions/dto.Task'
+        description: set on VERSION_CONFLICT
+      details:
+        items:
+          $ref: '#/definitions/apierror.FieldDetail'
+        type: array
+      message:
+        example: invalid request body
+        type: string
+    type: object
+  apierror.FieldDetail:
+    properties:
+      field:
+        example: name
+        type: string
+      reason:
+        example: must not be blank
+        type: string
+    type: object
+  apierror.Response:
+    properties:
+      error:
+        $ref: '#/definitions/apierror.Body'
+    type: object
+  dto.CreateTaskRequest:
+    properties:
+      name:
+        example: Buy milk
+        type: string
+      status:
+        description: optional, defaults to 0
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+    required:
+    - name
+    type: object
+  dto.Task:
+    properties:
+      created_at:
+        example: "2026-11-21T08:00:00.123Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Buy milk
+        type: string
+      status:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+      updated_at:
+        example: "2026-11-21T08:00:00.123Z"
+        type: string
+      version:
+        example: 1
+        type: integer
+    type: object
+  dto.TaskList:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.Task'
+        type: array
+    type: object
+  dto.UpdateTaskRequest:
+    properties:
+      name:
+        example: Buy oat milk
+        type: string
+      status:
+        enum:
+        - 0
+        - 1
+        example: 1
+        type: integer
+      version:
+        example: 1
+        type: integer
+    required:
+    - name
+    - status
+    - version
+    type: object
   handler.HealthResponse:
     properties:
       status:
@@ -24,4 +120,139 @@ paths:
       summary: Health check
       tags:
       - health
+  /tasks:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tasks ordered by id ascending
+          schema:
+            $ref: '#/definitions/dto.TaskList'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.Response'
+      summary: List tasks
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Task to create; status defaults to 0
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          headers:
+            Location:
+              description: /tasks/{id}
+              type: string
+          schema:
+            $ref: '#/definitions/dto.Task'
+        "400":
+          description: INVALID_JSON or VALIDATION_FAILED
+          schema:
+            $ref: '#/definitions/apierror.Response'
+        "413":
+          description: PAYLOAD_TOO_LARGE
+          schema:
+            $ref: '#/definitions/apierror.Response'
+        "415":
+          description: UNSUPPORTED_MEDIA_TYPE
+          schema:
+            $ref: '#/definitions/apierror.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.Response'
+      summary: Create a task
+      tags:
+      - tasks
+  /tasks/{id}:
+    delete:
+      parameters:
+      - description: Task ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: INVALID_ID
+          schema:
+            $ref: '#/definitions/apierror.Response'
+        "404":
+          description: TASK_NOT_FOUND
+          schema:
+            $ref: '#/definitions/apierror.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.Response'
+      summary: Delete a task
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Full replacement. `version` must equal the current version (optimistic
+        locking).
+      parameters:
+      - description: Task ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: New name, status and the version last read
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Task'
+        "400":
+          description: INVALID_ID, INVALID_JSON or VALIDATION_FAILED
+          schema:
+            $ref: '#/definitions/apierror.Response'
+        "404":
+          description: TASK_NOT_FOUND
+          schema:
+            $ref: '#/definitions/apierror.Response'
+        "409":
+          description: VERSION_CONFLICT, with the current task
+          schema:
+            $ref: '#/definitions/apierror.Response'
+        "413":
+          description: PAYLOAD_TOO_LARGE
+          schema:
+            $ref: '#/definitions/apierror.Response'
+        "415":
+          description: UNSUPPORTED_MEDIA_TYPE
+          schema:
+            $ref: '#/definitions/apierror.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.Response'
+      summary: Update a task
+      tags:
+      - tasks
 swagger: "2.0"

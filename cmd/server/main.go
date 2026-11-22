@@ -17,7 +17,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	app "github.com/dadamu/ggl-task-api/internal/application/task"
 	"github.com/dadamu/ggl-task-api/internal/infrastructures/config"
+	"github.com/dadamu/ggl-task-api/internal/infrastructures/persistence/memory"
 	"github.com/dadamu/ggl-task-api/internal/transport/http/router"
 	_ "github.com/dadamu/ggl-task-api/swagger" // swagger docs
 )
@@ -26,9 +28,12 @@ func main() {
 	cfg := config.Load()
 	gin.SetMode(cfg.GinMode)
 
+	// Composition root: the only place that calls time.Now (ADR-0006).
+	svc := app.NewService(memory.NewTaskRepository(), time.Now)
+
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           router.New(),
+		Handler:           router.New(svc),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
