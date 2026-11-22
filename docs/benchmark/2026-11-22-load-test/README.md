@@ -3,7 +3,8 @@
 - **Date:** 2026-11-22
 - **Raw output:** this folder: `k6-rate-*.txt` (k6 summaries), `stats-rate-*.txt` (container CPU and
   memory samples), `cpu-rate-20000.pprof` (CPU profile at 20,000 req/s)
-- **Reproduce:** `make loadtest` (or `RATES="..." PROFILE_RATES="..." loadtest/run.sh`)
+- **Reproduce:** `make loadtest` (or `RATES="..." PROFILE_RATES="..." loadtest/run.sh`); page
+  comparison: `GET_PAGE=last RATES=10000 STOP_ON_FAIL=false loadtest/run.sh`
 
 ## Question
 
@@ -54,6 +55,32 @@ This holds for a **small data set**: every step started from an empty store and 
 most ~70,000 tasks. Capacity with a large store was not measured; the
 [soak test](../2026-11-22-soak-test/) shows it is lower (see "Capacity depends on stored tasks"
 there).
+
+## First page vs last page
+
+In the sweep above every `GET /tasks` requested the first page (IDs 1–20): no cursor, and no
+deletions in the mix. That is the most favorable case (no deleted IDs to skip, the same tasks hot in
+CPU caches). To check, the 10,000 req/s step was repeated with `GET_PAGE=last`: each VU tracks the
+highest ID it has seen and requests `after = highest - 20`, so 91% of GETs hit the newest region of
+a growing store. Because that mode parses GET responses in k6, a control run parsed them in
+first-page mode too (`PARSE_GET=1`).
+
+| Mode (10,000 req/s, 2 runs each) | p50 | p95 | p99 | Peak CPU | Pass |
+|---|---|---|---|---|---|
+| First page | 427–428 µs | 1.05–1.18 ms | 18.9–23.6 ms | 136–149% | ✅ ✅ |
+| First page + k6 parses body (control) | 426–431 µs | 1.80–1.89 ms | 16.7–19.1 ms | 135–142% | ✅ ✅ |
+| Last page | 440 µs | 3.54–4.26 ms | 19.0–19.3 ms | 140–146% | ✅ ✅ |
+
+Raw output: `k6-page-*.txt`, `stats-page-*.txt` in this folder.
+
+- **Capacity is unchanged:** p50, p99, CPU and the pass result are the same for both pages.
+- **p95 is higher for the last page.** About 0.7 ms of the difference is client-side (k6 parsing
+  responses on the shared host, per the control). The remaining ~2 ms is **not explained**:
+  server CPU is unchanged, the repository uses one lock for every page, and the
+  [list benchmark](../2026-11-22-list-pagination/) shows equal in-process cost for first and
+  middle pages. Not investigated further.
+- The sparse worst case (many deleted IDs before the cursor) was not exercised under load; it was
+  measured only in-process (2.3 ms per page with 99.98% of 100,000 IDs deleted).
 
 ## Where the CPU goes (profile at 20,000 req/s)
 

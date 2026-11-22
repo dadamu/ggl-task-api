@@ -1,0 +1,48 @@
+
+
+  █ THRESHOLDS 
+
+    dropped_iterations{scenario:mixed}
+    ✓ 'count<3000' count=0
+
+    http_req_duration{scenario:mixed}
+    ✓ 'p(99)<50' p(99)=19.32ms
+    ✓ 'p(99)<1000' p(99)=19.32ms
+
+    http_req_failed{scenario:mixed}
+    ✓ 'rate<0.001' rate=0.00%
+    ✓ 'rate<0.05' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 346062  9634.998383/s
+    checks_succeeded...: 100.00% 346062 out of 346062
+    checks_failed......: 0.00%   0 out of 346062
+
+    ✓ POST 201
+    ✓ GET 200
+    ✓ PUT 200 or 409
+
+    HTTP
+    http_req_duration..............: avg=2.75ms p(50)=441µs    p(95)=6.84ms p(99)=34.42ms max=914.92ms
+      { expected_response:true }...: avg=2.75ms p(50)=441µs    p(95)=6.84ms p(99)=34.42ms max=914.92ms
+      { scenario:mixed }...........: avg=1.23ms p(50)=440.2µs  p(95)=4.26ms p(99)=19.32ms max=914.92ms
+    http_req_failed................: 0.00%  0 out of 346062
+      { scenario:mixed }...........: 0.00%  0 out of 300001
+    http_reqs......................: 346062 9634.998383/s
+
+    EXECUTION
+    dropped_iterations.............: 3941   109.724641/s
+      { scenario:mixed }...........: 0      0/s
+    iteration_duration.............: avg=3.48ms p(50)=560.61µs p(95)=7.13ms p(99)=35.56ms max=660.97ms
+    iterations.....................: 346062 9634.998383/s
+    vus............................: 4      min=4           max=433 
+    vus_max........................: 4109   min=4109        max=4109
+
+    NETWORK
+    data_received..................: 735 MB 21 MB/s
+    data_sent......................: 38 MB  1.1 MB/s
+
+
+

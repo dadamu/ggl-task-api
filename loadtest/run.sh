@@ -9,7 +9,8 @@
 #      RATES, OUT (loadtest/results),
 #      PROFILE_RATES (rates at which to capture a 15s pprof CPU profile; default none),
 #      STOP_ON_FAIL (true: stop at the first rate that misses the pass criteria),
-#      HEAP_AT (seconds after start at which to capture a heap profile; default none).
+#      HEAP_AT (seconds after start at which to capture a heap profile; default none),
+#      GET_PAGE (first | last; which page GET /tasks requests, default first).
 set -euo pipefail
 
 IMAGE=${IMAGE:-ggl-task-api:local}
@@ -21,6 +22,7 @@ OUT=${OUT:-loadtest/results}
 PROFILE_RATES=${PROFILE_RATES:-}
 STOP_ON_FAIL=${STOP_ON_FAIL:-true}
 HEAP_AT=${HEAP_AT:-}
+GET_PAGE=${GET_PAGE:-first}
 K6_IMAGE=grafana/k6:2.4.0
 NAME=ggl-loadtest
 PORT=18080
@@ -37,7 +39,7 @@ for rate in $RATES; do
     "$IMAGE" >/dev/null
   curl -fsS --retry 20 --retry-all-errors --retry-delay 1 -o /dev/null "http://localhost:$PORT/healthz"
 
-  echo "=== rate=${rate}/s duration=${DURATION} cpus=${CPUS} memory=${MEMORY}"
+  echo "=== rate=${rate}/s duration=${DURATION} cpus=${CPUS} memory=${MEMORY} get_page=${GET_PAGE}"
 
   # Sample container CPU and memory once per second while k6 runs: "<elapsed s> <cpu%> <mem used> / <limit>".
   start=$(date +%s)
@@ -61,7 +63,7 @@ for rate in $RATES; do
 
   status=0
   docker run --rm --network host -v "$PWD/loadtest:/scripts:ro" "$K6_IMAGE" run --quiet \
-    -e BASE_URL="http://localhost:$PORT" -e RATE="$rate" -e DURATION="$DURATION" \
+    -e BASE_URL="http://localhost:$PORT" -e RATE="$rate" -e DURATION="$DURATION" -e GET_PAGE="$GET_PAGE" -e PARSE_GET="${PARSE_GET:-0}" \
     /scripts/tasks.js >"$OUT/rate-$rate.txt" 2>&1 || status=$?
   [[ -n "$profiler" ]] && { wait "$profiler" || true; }
   [[ -n "$heaper" ]] && { kill "$heaper" 2>/dev/null || true; wait "$heaper" 2>/dev/null || true; }
