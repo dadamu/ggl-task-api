@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-21
+- **Amended:** 2026-11-22 — Notes: error precedence; validation errors reported per stage
 
 ## Context
 
@@ -165,3 +166,15 @@ Logger
 ## Notes
 
 - RFC 9457 can be adopted later in a superseding ADR if interoperability requires it.
+- **Error precedence.** When a request has several problems, the first applicable error is
+  returned: router-level (`404 ROUTE_NOT_FOUND`, `405`) → `413` when the declared
+  `Content-Length` exceeds 1 MB → `415` → `400 INVALID_ID` → body decoding (`413` when an
+  undeclared length exceeds 1 MB while reading, `400 INVALID_JSON`, missing fields) →
+  `404 TASK_NOT_FOUND` → `400` domain validation → `409 VERSION_CONFLICT`. Rationale: a missing
+  resource makes other errors moot, and an invalid body must not be reported as a version
+  conflict, since reloading would not fix it.
+- **Validation errors are reported per stage.** "All failing fields" holds within a stage, and
+  a stage stops at its first failure: (1) JSON type errors — only the first, as reported by
+  `encoding/json`; (2) missing fields — all; (3) domain rules — all. A request with problems in
+  several stages needs several round trips. Merging stages would require replacing gin's binding
+  with custom decoding, which ADR-0005 avoids.
